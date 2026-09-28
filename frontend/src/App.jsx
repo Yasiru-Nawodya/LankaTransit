@@ -1,10 +1,37 @@
 
+import { useState } from "react";
 import logo1 from "./assets/logo1.jpeg";
 
 
 function App() {
 
-  
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+
+const handleLogin = async (e) => {
+  e.preventDefault();
+
+  try {
+    const response = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
+
+    const data = await response.json();
+
+    console.log(data);
+  } catch (error) {
+    console.error("Login error:", error);
+  }
+};
   return (
     
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-blue-800 flex items-center justify-center px-6">
@@ -50,7 +77,7 @@ function App() {
             </p>
           </div>
 
-          <form className="space-y-5">
+        <form onSubmit={handleLogin} className="space-y-5">
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -58,10 +85,12 @@ function App() {
               </label>
 
               <input
-                type="email"
-                placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              />
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+/>
             </div>
 
             <div>
@@ -69,11 +98,13 @@ function App() {
                 Password
               </label>
 
-              <input
+             <input
                 type="password"
                 placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              />
+/>
             </div>
 
             <button
