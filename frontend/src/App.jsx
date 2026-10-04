@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import logo1 from "./assets/logo1.jpeg";
 
 
@@ -7,6 +7,40 @@ function App() {
 
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
+const [user, setUser] = useState(null);
+
+useEffect(() => {
+  const restoreSession = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setUser(data.user);
+      } else {
+        localStorage.removeItem("token");
+      }
+    } catch (error) {
+      console.error("Session restore failed:", error);
+    }
+  };
+
+  restoreSession();
+}, []);
 
 const handleLogin = async (e) => {
   e.preventDefault();
@@ -29,6 +63,7 @@ const handleLogin = async (e) => {
 
 if (response.ok) {
   localStorage.setItem("token", data.token);
+  setUser(data.user);
 
   console.log("Login successful");
   console.log("User:", data.user);
@@ -40,27 +75,152 @@ if (response.ok) {
   }
 };
 
-const getProfile = async () => {
-  const token = localStorage.getItem("token");
 
-  try {
-    const response = await fetch(
-      "http://localhost:5000/api/auth/profile",
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+/* Logout Functionality */
 
-    const data = await response.json();
-
-    console.log("Profile response:", data);
-  } catch (error) {
-    console.error("Profile error:", error);
-  }
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  setUser(null);
 };
+
+
+
+/* home page after login */ 
+
+if (user) {
+  return (
+    <div className="min-h-screen bg-slate-50">
+
+      {/* Navbar */}
+      <nav className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+
+          <div className="flex items-center gap-3">
+            <img
+              src={logo1}
+              alt="LankaTransit Logo"
+              className="w-11 h-11 object-contain"
+            />
+
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">
+                LankaTransit
+              </h1>
+              <p className="text-xs text-slate-500">
+                Smart Transit Platform
+              </p>
+            </div>
+          </div>
+
+      <div className="flex items-center gap-5">
+  <div className="text-right">
+    <p className="font-medium text-slate-800">
+      {user.name}
+    </p>
+    <p className="text-sm text-slate-500">
+      {user.role}
+    </p>
+  </div>
+
+  <button
+    onClick={handleLogout}
+    className="bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition"
+  >
+    Logout
+  </button>
+</div>
+
+        </div>
+      </nav>
+
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 py-10">
+
+        {/* Welcome */}
+        <div className="mb-10">
+          <p className="text-blue-600 font-medium mb-2">
+            LankaTransit Dashboard
+          </p>
+
+          <h2 className="text-4xl font-bold text-slate-900">
+            Welcome back, {user.name}
+          </h2>
+
+          <p className="text-slate-500 mt-3">
+            Manage your transit activities from one place.
+          </p>
+        </div>
+
+
+        {/* Feature Cards */}
+        <div className="grid md:grid-cols-3 gap-6">
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+            <div className="text-3xl mb-4">🚌</div>
+
+            <h3 className="text-lg font-semibold text-slate-900">
+              Bus Routes
+            </h3>
+
+            <p className="text-slate-500 mt-2 text-sm">
+              View and manage available LankaTransit routes.
+            </p>
+          </div>
+
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+            <div className="text-3xl mb-4">📍</div>
+
+            <h3 className="text-lg font-semibold text-slate-900">
+              Live Transit
+            </h3>
+
+            <p className="text-slate-500 mt-2 text-sm">
+              Monitor transit information and vehicle activity.
+            </p>
+          </div>
+
+
+          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+            <div className="text-3xl mb-4">🎫</div>
+
+            <h3 className="text-lg font-semibold text-slate-900">
+              My Journeys
+            </h3>
+
+            <p className="text-slate-500 mt-2 text-sm">
+              Access your journey and travel information.
+            </p>
+          </div>
+
+        </div>
+
+
+        {/* Account Section */}
+        <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-6">
+
+          <h3 className="text-lg font-semibold text-slate-900">
+            Account
+          </h3>
+
+          <div className="mt-4 flex flex-col sm:flex-row gap-6 text-sm">
+            <p className="text-slate-600">
+              <span className="font-medium">Email:</span> {user.email}
+            </p>
+
+            <p className="text-slate-600">
+              <span className="font-medium">Role:</span> {user.role}
+            </p>
+          </div>
+
+        </div>
+
+      </main>
+
+    </div>
+  );
+}
 
   return (
     
@@ -143,18 +303,6 @@ const getProfile = async () => {
             >
               Sign in
             </button>
-
-            // Test Protected Profile Button
-
-            <button
-  type="button"
-  onClick={getProfile}
-  className="w-full mt-3 border border-blue-600 text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition"
->
-  Test Protected Profile
-</button>
-
-
 
 
           </form>
