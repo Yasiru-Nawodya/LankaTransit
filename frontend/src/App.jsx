@@ -25,13 +25,43 @@ const handleLogin = async (e) => {
       }),
     });
 
-    const data = await response.json();
+   const data = await response.json();
 
-    console.log(data);
+if (response.ok) {
+  localStorage.setItem("token", data.token);
+
+  console.log("Login successful");
+  console.log("User:", data.user);
+} else {
+  console.log("Login failed:", data.message);
+}
   } catch (error) {
     console.error("Login error:", error);
   }
 };
+
+const getProfile = async () => {
+  const token = localStorage.getItem("token");
+
+  try {
+    const response = await fetch(
+      "http://localhost:5000/api/auth/profile",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = await response.json();
+
+    console.log("Profile response:", data);
+  } catch (error) {
+    console.error("Profile error:", error);
+  }
+};
+
   return (
     
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-blue-800 flex items-center justify-center px-6">
@@ -113,6 +143,19 @@ const handleLogin = async (e) => {
             >
               Sign in
             </button>
+
+            // Test Protected Profile Button
+
+            <button
+  type="button"
+  onClick={getProfile}
+  className="w-full mt-3 border border-blue-600 text-blue-600 py-3 rounded-lg font-semibold hover:bg-blue-50 transition"
+>
+  Test Protected Profile
+</button>
+
+
+
 
           </form>
 

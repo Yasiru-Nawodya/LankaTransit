@@ -15,7 +15,6 @@ async function createTestUser() {
       console.log("Test user already exists");
       return;
     }
-
     await User.create({
       name: "Test User",
       email: "test@lankatransit.lk",
