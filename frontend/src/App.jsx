@@ -5,6 +5,8 @@ import logo1 from "./assets/logo1.jpeg";
 
 function App() {
 
+const [loginError, setLoginError] = useState("");
+const [isLoggingIn, setIsLoggingIn] = useState(false); 
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
 const [user, setUser] = useState(null);
@@ -45,36 +47,56 @@ useEffect(() => {
 const handleLogin = async (e) => {
   e.preventDefault();
 
+  // Clear previous errors
+  setLoginError("");
+
+  // Validate input fields
+  if (!email.trim() || !password) {
+    setLoginError("Please enter your email and password.");
+    return;
+  }
+
+  // Show loading state
+  setIsLoggingIn(true);
+
   try {
     const response = await fetch("http://localhost:5000/api/auth/login", {
       method: "POST",
-
       headers: {
         "Content-Type": "application/json",
       },
-
       body: JSON.stringify({
         email,
         password,
       }),
     });
 
-   const data = await response.json();
+    const data = await response.json();
 
-if (response.ok) {
-  localStorage.setItem("token", data.token);
-  setUser(data.user);
-
-  console.log("Login successful");
-  console.log("User:", data.user);
-} else {
-  console.log("Login failed:", data.message);
-}
+    if (response.ok) {
+      // Successful login
+      localStorage.setItem("token", data.token);
+      setUser(data.user);
+      setLoginError("");
+    } else {
+      // Incorrect email or password
+      if (response.status === 400 || response.status === 401) {
+        setLoginError("Invalid email or password. Please try again.");
+      } else {
+        setLoginError(data.message || "Login failed. Please try again.");
+      }
+    }
   } catch (error) {
     console.error("Login error:", error);
+
+    setLoginError(
+      "Unable to connect to the server. Please try again later."
+    );
+  } finally {
+    // Runs whether login succeeds or fails
+    setIsLoggingIn(false);
   }
 };
-
 
 /* Logout Functionality */
 
@@ -297,13 +319,22 @@ if (user) {
 />
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-200"
-            >
-              Sign in
-            </button>
+            {loginError && (
+  <div
+    role="alert"
+    className="mb-4 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-600"
+  >
+    {loginError}
+  </div>
+)}
 
+            <button
+  type="submit"
+  disabled={isLoggingIn}
+  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  {isLoggingIn ? "Signing in..." : "Sign in"}
+</button>
 
           </form>
 
